@@ -25,8 +25,8 @@ jobs:
       - name: Install Copilot CLI
         run: npm install -g @githubnext/github-copilot-cli
 
-      - name: Authenticate Copilot
-        run: echo "${{ secrets.COPILOT_AUTH_TOKEN }}" | github-copilot-cli auth login --stdin
+      - name: Authenticate GitHub Copilot CLI
+        run: github-copilot-cli auth login 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
 
       - name: Generate README.md using Copilot
         run: node generate-readme.js
