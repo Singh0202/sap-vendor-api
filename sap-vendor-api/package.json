@@ -1,0 +1,40 @@
+{
+  "name": "sap-vendor-api",
+  "version": "1.0.0",
+  "description": "A NestJS API for managing vendor data with PostgreSQL database interaction and basic authentication.",
+  "main": "dist/main.js",
+  "scripts": {
+    "start": "nest start",
+    "build": "nest build",
+    "test": "jest",
+    "test:e2e": "jest --config ./test/jest-e2e.json"
+  },
+  "dependencies": {
+    "@nestjs/common": "^9.0.0",
+    "@nestjs/core": "^9.0.0",
+    "@nestjs/platform-express": "^9.0.0",
+    "pg": "^8.7.1",
+    "typeorm": "^0.2.41",
+    "passport": "^0.4.1",
+    "passport-http": "^0.3.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.13.1",
+    "dotenv": "^10.0.0"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^9.0.0",
+    "@nestjs/testing": "^9.0.0",
+    "jest": "^27.0.0",
+    "ts-jest": "^27.0.0",
+    "typescript": "^4.5.4",
+    "supertest": "^6.1.6"
+  },
+  "keywords": [
+    "nestjs",
+    "api",
+    "postgresql",
+    "authentication"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
