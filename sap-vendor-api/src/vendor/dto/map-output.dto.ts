@@ -4,4 +4,5 @@ export class MapOutputDto {
     description: string;
     createdAt: Date;
     updatedAt: Date;
+    phone:string;
 }

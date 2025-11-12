@@ -3,6 +3,7 @@ export class VendorMapper {
         return {
             id: input.id,
             name: input.name,
+            phone : '9922334455',
             items: input.items.map(item => ({
                 id: item.id,
                 description: item.description,
