@@ -1,6 +1,6 @@
 name: "Auto Generate README via Copilot"
 
-# 👇 Trigger this workflow when you push to the main branch
+# 👇 Trigger this workflow when you push to the main branch ##Demo
 on:
   push:
     branches:
