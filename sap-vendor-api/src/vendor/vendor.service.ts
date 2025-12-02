@@ -25,6 +25,7 @@ export class VendorService {
     await this.vendorItemRepository.save(vendorItem);
     
     console.log("Demo log");
+    console.log("Demo log1");
 
     return VendorMapper.toOutputDto(vendorHeader, vendorItem);
   }
