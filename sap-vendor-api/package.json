@@ -7,12 +7,15 @@
     "start": "nest start",
     "build": "nest build",
     "test": "jest",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "generate-readme": "node ../generate-readme.js",
+    "setup-hooks": "node ../scripts/setup-git-hooks.js"
   },
   "dependencies": {
     "@nestjs/common": "^9.0.0",
     "@nestjs/core": "^9.0.0",
     "@nestjs/platform-express": "^9.0.0",
+    "@google/generative-ai": "^0.3.0",
     "pg": "^8.7.1",
     "typeorm": "^0.2.41",
     "passport": "^0.4.1",
