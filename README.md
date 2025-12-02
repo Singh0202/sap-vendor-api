@@ -101,7 +101,7 @@ The project follows a standard NestJS modular structure, with a clear separation
 │   │   ├── auth/                   # Authentication module
 │   │   │   ├── auth.module.ts
 │   │   │   ├── basic-auth.guard.ts # Basic Auth Guard
-│   │   │   └── basic.strategy.ts   # Passport Basic Strategy
+│   │   │   └── basic.strategy.ts   # Passport Basic Strategy (assumes AuthService)
 │   │   ├── common/                 # Common utilities (filters, interceptors)
 │   │   │   ├── filters/
 │   │   │   │   └── http-exception.filter.ts # Global Exception Filter
@@ -128,8 +128,8 @@ The project follows a standard NestJS modular structure, with a clear separation
 │   ├── ormconfig.js                # TypeORM CLI configuration
 │   ├── package.json                # Project dependencies and scripts
 │   ├── tsconfig.json               # TypeScript configuration
-│   └── .env.example                # Example environment variables (not provided, but good practice)
-├── package.json                    # Root level dependencies (for auto-documentation)
+│   └── .env.example                # Example environment variables (good practice, but not explicitly provided)
+├── package.json                    # Root level dependencies (for auto-documentation scripts)
 └── README.md                       # This file (auto-generated)
 ```
 
@@ -139,7 +139,7 @@ All API endpoints are prefixed with `/vendors`. Basic Authentication is required
 
 | Method | Endpoint | Description | Request Body | Response Body | Authentication |
 | :----- | :------- | :---------- | :----------- | :------------ | :------------- |
-| `POST` | `/vendors` | Creates a new vendor entry in the database. | `MapInputDto` (contains vendor details like `vendorName`, `contactPerson`, `contactEmail`) | `MapOutputDto` (newly created vendor details with `id`, `name`, `phone`, `items`) | Basic Auth Required |
+| `POST` | `/vendors` | Creates a new vendor entry in the database. | `MapInputDto` (e.g., `vendorName`, `contactPerson`, `contactEmail`) | `MapOutputDto` (newly created vendor details with `id`, `name`, `phone`, `items`) | Basic Auth Required |
 | `GET` | `/vendors` | Retrieves a list of all existing vendors. | None | `MapOutputDto[]` (array of vendor details) | Basic Auth Required |
 
 ## 7. Authentication
@@ -147,8 +147,8 @@ All API endpoints are prefixed with `/vendors`. Basic Authentication is required
 The API uses **Basic Authentication** implemented with `Passport.js`.
 
 *   **Mechanism**: A `BasicStrategy` is configured using `passport-http`.
-*   **Validation**: `BasicStrategy` delegates user validation to a (not explicitly provided but assumed) `AuthService`, which is expected to verify the provided username and password.
-*   **Guard**: `BasicAuthGuard` protects the API endpoints, ensuring that only authenticated requests proceed.
+*   **Validation**: `BasicStrategy` relies on an injected `AuthService` (not explicitly provided in snippets but assumed as part of NestJS's Passport integration) to `validateUser` with the provided username and password. Upon successful validation, it returns the user object. If validation fails, it throws an `UnauthorizedException`.
+*   **Guard**: `BasicAuthGuard` extends `AuthGuard('basic')` and protects the API endpoints, ensuring that only authenticated requests with valid Basic Auth headers proceed.
 
 To access protected endpoints, include an `Authorization` header with `Basic <base64_encoded(username:password)>`.
 Example: `Authorization: Basic YWRtaW46cGFzc3dvcmQ=` (for username `admin` and password `password`).
@@ -156,10 +156,10 @@ Example: `Authorization: Basic YWRtaW46cGFzc3dvcmQ=` (for username `admin` and p
 ## 8. Database
 
 *   **Type**: PostgreSQL
-*   **ORM**: TypeORM
-*   **Configuration**: Database connection settings are managed via `ormconfig.js` and `src/config/database.config.ts`, utilizing environment variables for flexibility.
+*   **ORM**: TypeORM is used for interacting with the database.
+*   **Configuration**: Database connection settings are managed via `ormconfig.js` and `src/config/database.config.ts`, utilizing environment variables (e.g., `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME`) for flexibility.
 *   **Entities**:
-    *   `VendorHeader`: Stores primary vendor information.
+    *   `VendorHeader`: Represents the main vendor information.
         *   `id` (PrimaryGeneratedColumn)
         *   `name` (string)
         *   `address` (string)
@@ -167,14 +167,14 @@ Example: `Authorization: Basic YWRtaW46cGFzc3dvcmQ=` (for username `admin` and p
         *   `email` (string)
         *   `created_at` (Date)
         *   `updated_at` (Date)
-    *   `VendorItem`: Stores items associated with a vendor.
+    *   `VendorItem`: Represents items associated with a specific vendor.
         *   `id` (PrimaryGeneratedColumn)
         *   `vendorId` (number)
         *   `itemName` (string)
         *   `price` (decimal)
         *   `quantity` (number)
         *   `description` (string, nullable)
-*   **Synchronization**: The `synchronize: true` option is enabled in `ormconfig.js` and `database.config.ts`. This automatically creates database tables from your entities on application startup. **Note**: `synchronize: true` is suitable for development environments but **should be set to `false` in production** to prevent accidental data loss and use TypeORM migrations for schema changes.
+*   **Synchronization**: The `synchronize: true` option is enabled in `ormconfig.js` and `database.config.ts`. This automatically creates and updates database tables from your entities on application startup. **Note**: While convenient for development, `synchronize: true` is generally **not recommended for production environments** as it can lead to data loss. In production, use TypeORM migrations for controlled schema changes.
 
 ## 9. Running the Application
 
@@ -185,23 +185,22 @@ To start the NestJS application:
     cd sap-vendor-api
     ```
 2.  **Start in Development Mode**:
-    This will compile the TypeScript code and start the application with hot-reloading.
+    This will compile the TypeScript code and start the application with hot-reloading using `nest start`. The application will typically run on `http://localhost:3000`.
     ```bash
     npm run start
     ```
-    The application will typically run on `http://localhost:3000`.
 
 3.  **Build for Production**:
+    This compiles the TypeScript code into JavaScript in the `dist` directory.
     ```bash
     npm run build
     ```
-    This compiles the TypeScript code into JavaScript in the `dist` directory.
 
 4.  **Start in Production Mode**:
     After building, you can run the compiled JavaScript application.
     ```bash
     npm run start:prod
-    # Or navigate to dist folder and run: node main.js
+    # Or, navigate to the dist folder and run: node main.js
     ```
 
 ## 10. Testing
@@ -220,37 +219,36 @@ The project includes unit and end-to-end (e2e) tests.
     ```bash
     npm run test:e2e
     ```
-    **Note**: E2E tests (`test/vendor.e2e-spec.ts`) include placeholder credentials (`username`, `password`) in `auth('username', 'password')`. These should be replaced with valid credentials for actual testing.
+    **Note**: E2E tests (`test/vendor.e2e-spec.ts`) include placeholder credentials (`username`, `password`) in `auth('username', 'password')`. These should be replaced with valid credentials for actual testing against your configured authentication service.
 
 ## 11. Deployment
 
 This is a standard NestJS application. Deployment involves:
 
-1.  **Building the application**: `npm run build`
-2.  **Setting up a production environment**: Ensure Node.js and PostgreSQL are available.
-3.  **Configuring environment variables**: Crucially, ensure all `DB_*` environment variables are correctly set in the production environment. Set `NODE_ENV=production`.
-4.  **Running the compiled application**: `node dist/main.js` or via a process manager like PM2.
+1.  **Building the application**: Execute `npm run build` to compile the TypeScript code.
+2.  **Setting up a production environment**: Ensure Node.js (version 16+), npm, and a PostgreSQL database are available.
+3.  **Configuring environment variables**: Crucially, ensure all `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME` environment variables are correctly set in the production environment. It is also recommended to set `NODE_ENV=production`.
+4.  **Running the compiled application**: Start the application using `node dist/main.js` or via a process manager like PM2 for robust production management.
 
-For the automated README generation feature in a CI/CD pipeline (e.g., GitHub Actions):
-*   Ensure `GOOGLE_API_KEY` is securely stored as a GitHub Secret.
-*   The `workflows/update-readme.yml` workflow is already configured to build, generate docs, and push updates.
+For the automated `README.md` generation feature in a CI/CD pipeline (e.g., GitHub Actions):
+*   Ensure your `GOOGLE_API_KEY` is securely stored as a GitHub Secret within your repository settings.
+*   The `workflows/update-readme.yml` workflow is already configured to trigger on every push, build the necessary dependencies, generate documentation using Google Gemini AI, and automatically commit/push the updated `README.md` back to your branch. This ensures that your documentation is always current with your deployed codebase.
 
 ## 12. Contributing
 
 We welcome contributions to this project!
 
 1.  **Fork the repository**.
-2.  **Create a new branch**: `git checkout -b feature/your-feature-name`
-3.  **Make your changes**.
-4.  **Ensure tests pass** and add new tests if necessary.
-5.  **Commit your changes**: `git commit -m "feat: Add new vendor endpoint"`
-6.  **Push to your fork**: `git push origin feature/your-feature-name`
-7.  **Open a Pull Request** to the `main` branch.
+2.  **Create a new branch**: Use a descriptive name like `git checkout -b feature/your-feature-name` or `bugfix/issue-description`.
+3.  **Make your changes**. Ensure your code adheres to the project's coding style and best practices.
+4.  **Ensure tests pass** and add new tests for your changes if necessary to maintain coverage.
+5.  **Commit your changes**: Use clear and concise commit messages (e.g., `feat: Add new vendor endpoint`, `fix: Resolve authentication bug`).
+6.  **Push to your fork**: `git push origin feature/your-feature-name`.
+7.  **Open a Pull Request** to the `main` branch of the upstream repository.
 
-**Regarding Documentation**: This repository features automated documentation generation. Any `git push` will trigger a GitHub Actions workflow that regenerates the `README.md` using Google Gemini AI, ensuring that the documentation stays up-to-date with your code changes. Please ensure your code is clean and well-structured to facilitate accurate AI-driven documentation. While the automation helps, manual review and refinement of the generated `README.md` are always encouraged before merging major changes.
+**Regarding Documentation**: This repository features automated documentation generation. Any `git push` will trigger a GitHub Actions workflow that regenerates the `README.md` using Google Gemini AI. This process analyzes your code and updates the documentation, ensuring it stays up-to-date. While the automation greatly aids, manual review and refinement of the generated `README.md` are always encouraged, especially for significant changes, to ensure accuracy and clarity before merging.
 
 ## 13. License
 
-This project is licensed under the **MIT License** - see the `LICENSE` file for details (not explicitly provided in snippets, but assumed based on `package.json` entry).
-
+This project is licensed under the **MIT License**. For detailed terms, please refer to the `LICENSE` file in the repository (not explicitly provided in the snippets but declared in `sap-vendor-api/package.json`).
 ```
